@@ -1,12 +1,14 @@
 # My-Projects-AI
 
 ## Overview
+A compilation of simple AI projects. This repository is still a work in progress.
+
 Sandbox for experimenting with:
 1. A basic Google Gemini powered coding agent (function calling prototype).
 2. A console calculator (with an intentionally buggy `add` implementation for testing error detection) that the agent can diagnose and propose fixes for.
 3. Safe filesystem helper utilities (read, list, run, and write within a constrained working directory).
 
-> Note: This is a learning-oriented, basic agent inspired by the freeCodeCamp tutorial/video: https://youtu.be/YtHdaXuOAks?si=0cBvFtqgibMFuPm5. Features are intentionally minimal and security-focused for educational exploration.
+> Note: This is a learning-oriented, basic agent inspired by the freeCodeCamp tutorial/video: https://youtu.be/YtHdaXuOAks?si=0cBvFtqgibMFuPm5. Features are intentionally minimal and security-focused.
 
 ## Project Structure
 ```
