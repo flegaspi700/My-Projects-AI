@@ -6,10 +6,10 @@ from google.genai import types
 # load environment variables from .env file
 load_dotenv()
 
-#set Parameters
+# Set Parameters
 model_id = "gemini-2.5-flash" #or "gemini-1.5-pro"
 
-#initialize Gemini client
+# Initialize Gemini client
 api_key = os.getenv("GENAI_API_KEY")
 if not api_key:
     print("Error: GENAI_API_KEY not found in environment variables.")
@@ -24,24 +24,24 @@ print("🤖 Chatbot initialized! Type 'exit' to quit.\n" + "-" * 40)
 
 while True:
     #query to send to Gemini
-    query = input("👤 Enter your query: ")
-    if query.lower() == 'exit':
+    query = input("\n 👤 Enter your query: ")
+    if query.lower().strip() == 'exit':
         print("Exiting the program.")
         break
 
-    #make the API call using Gemini
     try:
-        print("🤖 System call")
-        # 2. Send the message through the chat session
-        response = chat.send_message(
+        print("\n 🤖 System call", end='', flush=True)
+        # 2. use send_message_stream to stream the response from the model
+        response_stream = chat.send_message_stream(
             message=query,
             config=types.GenerateContentConfig(
                 max_output_tokens=500,
             ),
         )
 
-        print(f"👤 Query: {query}")
-        print(f"\nResponse:\n{response.text}")
+        # iterate over the streamed response and print it in real-time
+        for chunk in response_stream:
+            print(chunk.text, end='', flush=True)
 
     except Exception as e:
         print(f"Error calling Gemini: {e}")
