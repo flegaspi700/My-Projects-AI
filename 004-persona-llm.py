@@ -28,7 +28,7 @@ system_prompt = (
 chat = client.chats.create(
     model=model_id,
     config=types.GenerateContentConfig(
-        system_instructions=system_prompt,
+        system_instruction=system_prompt,
     ),
 )
 
