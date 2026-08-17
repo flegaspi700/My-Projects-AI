@@ -15,11 +15,16 @@ if not api_key:
 
 client = genai.Client(api_key=api_key)
 
+#query = "Explain how AI works in a few words"
+query = input("👤 Enter your query: ")
+
 stream = client.interactions.create(
     model=model_id,
-    input="Explain how AI works?",
+    input=query,
     stream=True
 )
 
-for events in stream:
-    print(events, end="", flush=True)
+for event in stream:
+    if event.event_type == "step.delta":
+        if event.delta.type == "text":
+            print(event.delta.text, end="", flush=True)
