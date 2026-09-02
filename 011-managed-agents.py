@@ -17,7 +17,7 @@ client = genai.Client(api_key=api_key)
 
 interaction = client.interactions.create(
     agent="antigravity-preview-05-2026",
-    input="Write a Python script that generates the first 20 Fibonacci numbers and saves them to fibonacci.txt. Then read the file and print its contents.",
+    input="Write a Python script that generates the first 20 Fibonacci numbers and saves them to fibonacci.txt. Save the file locally. Then read the file and print its contents.",
     environment="remote",
 )
 print(f"Environment: {interaction.environment_id}")
