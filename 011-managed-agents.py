@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 #set parameters
-model = "gemini-2.5-flash"
+# don't need the model parameter for managed agents.
+#model = "gemini-2.5-flash"
 
 api_key = os.getenv("GENAI_API_KEY")
 if not api_key:
@@ -20,5 +21,6 @@ interaction = client.interactions.create(
     input="Write a Python script that generates the first 20 Fibonacci numbers and saves them to fibonacci.txt. Save the file locally. Then read the file and print its contents.",
     environment="remote", #files will be created inside the agent’s remote environment
 )
+print(f"Interaction ID: {interaction.id}")
 print(f"Environment: {interaction.environment_id}")
-print(interaction.output_text)
+print(f"Output: {interaction.output_text}")
