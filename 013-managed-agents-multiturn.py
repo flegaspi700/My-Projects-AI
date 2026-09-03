@@ -24,3 +24,12 @@ interaction = client.interactions.create(
 print(f"Interaction ID: {interaction.id}")
 print(f"Environment: {interaction.environment_id}")
 print(f"Output: {interaction.output_text}")
+
+interaction_2 = client.interactions.create(
+    agent="antigravity-preview-05-2026",
+    input="Now plot the sequence as a line chart",
+    environment=interaction.environment_id, #use the same environment as the previous interaction
+    previous_interaction_id=interaction.id, #link to the previous interaction,
+)
+print(f"Interaction ID: {interaction_2.id}")
+print(f"Output: {interaction_2.output_text}")
