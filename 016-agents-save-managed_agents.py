@@ -14,7 +14,7 @@ client = genai.Client(api_key=api_key)
 
 # Define a custom agent based from the managed agent "antigravity-preview-05-2026"
 base_agent_id = "antigravity-preview-05-2026"
-model = "gemini-3.8-flash"
+model = "gemini-2.5-flash"
 agent_id = "my-custom-agent-03"
 
 # Try to create it; if it already exists, fetch it instead
