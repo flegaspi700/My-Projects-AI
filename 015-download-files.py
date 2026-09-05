@@ -1,6 +1,8 @@
 import os
 from google import genai
 from dotenv import load_dotenv
+import requests
+import tarfile
 
 #load environment variables
 load_dotenv()
@@ -33,3 +35,19 @@ interaction_2 = client.interactions.create(
 )
 print(f"Interaction ID: {interaction_2.id}")
 print(f"Output: {interaction_2.output_text}")
+
+env_id = interaction.environment_id
+
+response = requests.get(
+    f"https://generativelanguage.googleapis.com/v1beta/environments-{env_id}:download",
+    params={"alt": "media"},
+    headers={"x-goog-api-key": api_key},
+    allow_redirects=True,
+    timeout=60
+)
+
+with open("snapshot.tar", "wb") as f:
+    f.write(response.content)
+
+with tarfile.open("snapshot.tar") as tar:
+    tar.extractall(path="extracted_snapshot", filter='data') # extract the contents of the tar file to a directory named "extracted_snapshot"
