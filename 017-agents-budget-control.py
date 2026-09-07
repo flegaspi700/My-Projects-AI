@@ -12,9 +12,10 @@ if not api_key:
 #initialize the client
 client = genai.Client(api_key=api_key)
 
+#For antigravity-preview-05-2026, the default model is Gemini 3.8 Flash (gemini-3.8-flash). 
 interaction = client.interactions.create(
     agent="antigravity-preview-05-2026",
-    input="Read Hacker News, summarize the top 10 stories, and save the results as a PDF.",
+    input="Read Hacker News, summarize the top 10 stories.",
     environment="remote",
     agent_config={
         "type": "antigravity",
@@ -23,5 +24,6 @@ interaction = client.interactions.create(
     }
 )
 
+print(interaction.output_text)
 print(f"Status: {interaction.status}") #'incomplete' - if budget was hit. 
 print(f"Tokens used: {interaction.usage.total_tokens}")
