@@ -41,3 +41,24 @@ gcloud run deploy coffee-barista `
   --service-account "barista-agent-sa@$PROJECT_ID.iam.gserviceaccount.com" `
   --set-secrets GOOGLE_API_KEY=gemini-key:latest `
   --set-env-vars GOOGLE_GENAI_USE_ENTERPRISE=TRUE,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=global
+
+
+Clean up 
+gcloud run services delete coffee-barista `
+  --region $REGION `
+  --project $PROJECT_ID `
+  --quiet
+
+gcloud iam service-accounts delete `
+  "barista-agent-sa@$PROJECT_ID.iam.gserviceaccount.com" `
+  --project $PROJECT_ID `
+  --quiet
+
+  gcloud run services delete coffee-barista `
+  --region $REGION `
+  --project $PROJECT_ID `
+  --quiet
+
+gcloud secrets delete gemini-key `
+  --project $PROJECT_ID `
+  --quiet
