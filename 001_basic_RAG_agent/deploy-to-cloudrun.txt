@@ -1,0 +1,43 @@
+Deploy to cloud run using VSCODE.
+
+$config = Get-Content .env | ConvertFrom-StringData
+
+$PROJECT_ID = $config.PROJECT_ID
+$REGION = $config.REGION
+
+Write-Host "PROJECT_ID: [$PROJECT_ID]"
+Write-Host "REGION:     [$REGION]"
+
+gcloud config set project $PROJECT_ID
+gcloud config get-value project
+
+Create a dedicated service account:
+  gcloud iam service-accounts create barista-agent-sa `
+    --description="Service account for Coffee Barista ADK agent on Cloud Run" `
+    --display-name="Barista Agent Service Account"
+
+Grant the Gemini Enterprise Agent Platform user role (roles/aiplatform.user) to the new service account:
+  gcloud projects add-iam-policy-binding $PROJECT_ID `
+    --member="serviceAccount:barista-agent-sa@$PROJECT_ID.iam.gserviceaccount.com" `
+    --role="roles/aiplatform.user"
+
+Create a secret then pass the set-secrets
+gcloud secrets create gemini-key `
+  --project $PROJECT_ID `
+  --replication-policy="automatic"
+
+gcloud secrets versions add gemini-key `
+  --project $PROJECT_ID `
+  --data-file=-
+
+Deploy the service using gcloud run deploy, passing the new service account email via the --service-account flag:
+gcloud run deploy coffee-barista `
+  --source . `
+  --region $REGION `
+  --allow-unauthenticated `
+  --labels dev-tutorial=codelab-streamlit-rag-adk `
+  --command "/cnb/lifecycle/launcher" `
+  --args "sh,-c,python3 -m streamlit run app.py --server.port=`$PORT --server.address=0.0.0.0 --server.enableCORS=false --server.enableXsrfProtection=false" `
+  --service-account "barista-agent-sa@$PROJECT_ID.iam.gserviceaccount.com" `
+  --set-secrets GOOGLE_API_KEY=gemini-key:latest `
+  --set-env-vars GOOGLE_GENAI_USE_ENTERPRISE=TRUE,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=global
