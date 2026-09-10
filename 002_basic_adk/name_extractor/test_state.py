@@ -11,7 +11,7 @@ from google.genai.types import Content, Part
 
 #Setup Runner and Session
 session_service = InMemorySessionService()
-session = session_service.create_session(
+session = session_service.create_session_sync(
     app_name="name_extractor_app",
     user_id="test_user",
     session_id="test_session"
