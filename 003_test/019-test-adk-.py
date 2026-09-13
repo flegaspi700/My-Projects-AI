@@ -1,0 +1,173 @@
+import os
+import sys
+# Add the parent directory to sys.path to allow importing from adk_utils
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from dotenv import load_dotenv
+
+from google.adk import Agent
+from google.genai import types
+from google.adk.tools import google_search  # The Google Search tool
+from google.adk.models import Gemini, LlmResponse
+from google.adk.apps.app import App
+
+from adk_utils.plugins import LabExUtils
+
+load_dotenv()
+
+# Retry options help avoid the occasional error from popular models
+# receiving too many requests at once.
+RETRY_OPTIONS = types.HttpRetryOptions(initial_delay=1, max_delay=3, attempts=30)
+plugins = [LabExUtils()]
+
+root_agent = Agent(
+    # name: A unique name for the agent.
+    name="google_search_agent",
+    # description: A short description of the agent's purpose, so
+    # other agents in a multi-agent system know when to call it.
+    description="Answer questions using Google Search.",
+    # model: The LLM model that the agent will use:
+    model=Gemini(model=os.getenv("MODEL"), retry_options=RETRY_OPTIONS),
+    # instruction: Instructions (or the prompt) for the agent.
+    instruction="You are an expert researcher. You stick to the facts.",
+    # tools: functions to enhance the model's capabilities.
+    # Add the google_search tool below.
+    tools=[google_search]
+)
+
+app = App(
+    name="my_google_search_agent",
+    root_agent=root_agent,
+    plugins=plugins
+)
+
+
+#These should be in the env file: 
+"""
+Note: When you run an agent, ADK needs to know who is requesting the model API calls. You can provide this information in one of two ways:
+
+Provide a Gemini API key.
+Authenticate your environment with Google Cloud credentials and associate your model API calls with an Agent Platform project and location.
+In this lab, you take the Agent Platform approach.
+"""
+cd ~/adk_project
+cat << EOF > my_google_search_agent/.env
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_CLOUD_PROJECT=qwiklabs-gcp-03-9ac33a83853a
+GOOGLE_CLOUD_LOCATION=global
+MODEL=gemini-3.7-flash
+OTEL_SERVICE_NAME=adk-agent
+OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true
+EOF
+
+
+################
+import os
+import sys
+
+# Define base paths relative to this file
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ADK_PROJECT_DIR = os.path.dirname(CURRENT_DIR)
+BUCKET_DATA_DIR = os.path.dirname(ADK_PROJECT_DIR)
+
+# Add paths to sys.path if not already present to allow absolute imports
+if ADK_PROJECT_DIR not in sys.path:
+    sys.path.append(ADK_PROJECT_DIR)
+if BUCKET_DATA_DIR not in sys.path:
+    sys.path.append(BUCKET_DATA_DIR)
+
+import asyncio
+from dotenv import load_dotenv
+from google.adk import Agent
+from google.adk.runners import InMemoryRunner
+from google.adk.sessions import Session
+from google.genai import types
+from google.adk.models import Gemini, LlmResponse
+from google.adk.apps.app import App
+
+from adk_utils.plugins import LabExUtils
+
+import logging
+import google.cloud.logging
+
+from pydantic import BaseModel, Field
+
+class CountryCapital(BaseModel):
+    capital: str = Field(description="A country's capital.")
+
+# 1. Load environment variables from the agent directory's .env file
+load_dotenv()
+model_name = os.getenv("MODEL")
+
+# Retry options help avoid the occasional error from popular models
+# receiving too many requests at once.
+RETRY_OPTIONS = types.HttpRetryOptions(initial_delay=1, max_delay=3, attempts=30)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
+
+cloud_logging_client = google.cloud.logging.Client()
+cloud_logging_client.setup_logging()
+
+# Create an async main function
+async def main():
+
+    # 2. Set or load other variables
+    app_name = 'app_agent'
+    user_id_1 = 'user1'
+
+    # 3. Define Your Agent
+    root_agent = Agent(
+        model=Gemini(model=model_name, retry_options=RETRY_OPTIONS),
+        name="trivia_agent",
+            instruction="Answer questions.",
+            output_schema=CountryCapital
+    )
+
+    plugins = [LabExUtils()]
+
+    app = App(
+        name=app_name,
+        root_agent=root_agent,
+        plugins=plugins
+    )
+
+    # 3. Create a Runner
+    runner = InMemoryRunner(app=app)
+
+    # 4. Create a session
+    my_session = await runner.session_service.create_session(
+        app_name=app_name, user_id=user_id_1
+    )
+
+    # 5. Prepare a function to package a user's message as
+    # genai.types.Content, run it asynchronously, and iterate
+    # through the response 
+    async def run_prompt(session: Session, new_message: str):
+        content = types.Content(
+                role='user', parts=[types.Part.from_text(text=new_message)]
+            )
+        logging.info(f'** User says: {new_message}')
+        async for event in runner.run_async(
+            user_id=user_id_1,
+            session_id=session.id,
+            new_message=content,
+        ):
+            if event.content.parts and event.content.parts[0].text:
+                logging.info(f'** {event.author}: {event.content.parts[0].text}')
+
+
+    # 6. Use this function on a new query
+    query = "What is the capital of France?"
+    await run_prompt(my_session, query)
+
+    cloud_logging_client.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
